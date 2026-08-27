@@ -1,0 +1,294 @@
+{
+  "name": "Technical Content Repurposer",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "repurpose-content",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "cafcbc84-e326-4696-8f49-8a16fd4db76b",
+      "name": "Content URL Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        112
+      ],
+      "webhookId": "cea8bd6c-7d04-446a-a1c5-a7f64ea843a1"
+    },
+    {
+      "parameters": {
+        "url": "=https://r.jina.ai/{{ $json.body.url }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "id": "a3c1e23c-b090-4e54-97ea-78a29be025f0",
+      "name": "Scrape Article (Jina Reader)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        224,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze the following technical article and repurpose it into social media assets.\n\nARTICLE CONTENT:\n{{ $json.data }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are an expert technical content strategist and ghostwriter. You turn dense technical blog posts and whitepapers into high-performing social media assets for an engineering-leadership audience.\n\nGenerate exactly:\n1. insights: 3 to 5 core technical insights, each a concise, specific, non-generic sentence grounded in the article.\n2. linkedin_carousel: an 8-slide executive LinkedIn carousel script. Slide 1 is a scroll-stopping hook, slides 2-7 break down the key ideas (one idea per slide, punchy and skimmable), slide 8 is a clear call to action. Each slide has slide (number), title (short), and body (1-3 short lines).\n3. twitter_thread: a 5-tweet technical X/Twitter thread. Tweet 1 hooks, tweets 2-4 deliver technical substance, tweet 5 wraps with a takeaway or CTA. Keep each tweet under 280 characters.\n\nBe accurate to the source material and never invent facts not supported by the article. Return only the structured object."
+        }
+      },
+      "id": "6c0185e1-97ee-42ba-b9c7-45c0e6f8f54d",
+      "name": "Repurpose Content Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        464,
+        448
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "id": "84eef646-7abd-45d3-9a64-8c26a8bd2615",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        480,
+        672
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "Kj9XVvQnCH0t7BLq",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\"type\":\"object\",\"properties\":{\"insights\":{\"type\":\"array\",\"description\":\"3 to 5 core technical insights\",\"items\":{\"type\":\"string\"}},\"linkedin_carousel\":{\"type\":\"array\",\"description\":\"Exactly 8 slides: slide 1 hook, slides 2-7 breakdowns, slide 8 CTA\",\"items\":{\"type\":\"object\",\"properties\":{\"slide\":{\"type\":\"number\"},\"title\":{\"type\":\"string\"},\"body\":{\"type\":\"string\"}},\"required\":[\"slide\",\"title\",\"body\"]}},\"twitter_thread\":{\"type\":\"array\",\"description\":\"Exactly 5 tweets forming a technical thread\",\"items\":{\"type\":\"string\"}}},\"required\":[\"insights\",\"linkedin_carousel\",\"twitter_thread\"]}"
+      },
+      "id": "f19ffc2e-5a6d-43e7-96cf-faa335ca9eab",
+      "name": "Content Structure Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        640,
+        672
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1l0qXDZ3W0GaCyKqK8RuStyqsL2OG2nvWjdmgCGUGNUo",
+          "mode": "list",
+          "cachedResultName": "Content Sheet",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1l0qXDZ3W0GaCyKqK8RuStyqsL2OG2nvWjdmgCGUGNUo/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1l0qXDZ3W0GaCyKqK8RuStyqsL2OG2nvWjdmgCGUGNUo/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Source URL": "={{ $(\"Content URL Webhook\").item.json.body.url }}",
+            "Insights": "={{ $json.output.insights.join(\"\\n\") }}",
+            "LinkedIn Carousel": "={{ JSON.stringify($json.output.linkedin_carousel, null, 2) }}",
+            "Twitter Thread": "={{ $json.output.twitter_thread.join(\"\\n\\n\") }}",
+            "Status": "Draft",
+            "Created At": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Source URL",
+              "displayName": "Source URL",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Insights",
+              "displayName": "Insights",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "LinkedIn Carousel",
+              "displayName": "LinkedIn Carousel",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Twitter Thread",
+              "displayName": "Twitter Thread",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Created At",
+              "displayName": "Created At",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "c518fb2a-ab68-4f28-b351-7ef5cd0ad1ca",
+      "name": "Save to Content Calendar",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        800,
+        112
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "WWBZab5JHcEd5tBa",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Content URL Webhook": {
+      "main": [
+        [
+          {
+            "node": "Scrape Article (Jina Reader)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scrape Article (Jina Reader)": {
+      "main": [
+        [
+          {
+            "node": "Repurpose Content Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Repurpose Content Agent": {
+      "main": [
+        [
+          {
+            "node": "Save to Content Calendar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Repurpose Content Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Content Structure Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Repurpose Content Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "1e1dbdea-9346-41d1-9e9f-828e6ea9b741",
+  "meta": {
+    "instanceId": "5f58ef151cd0f075da3e9df352c3c1228b589eb0d1ff6e8f0f308283d8dddaf0"
+  },
+  "nodeGroups": [
+    {
+      "id": "cd6bd33a-e4b0-4365-88a4-a585eae278aa",
+      "name": "Ingest",
+      "nodeIds": [
+        "a3c1e23c-b090-4e54-97ea-78a29be025f0"
+      ],
+      "description": "Receives a URL via webhook and scrapes the article text/markdown."
+    },
+    {
+      "id": "3b6681a9-9349-4987-8e28-d07f9bbe16ad",
+      "name": "Generate",
+      "nodeIds": [
+        "6c0185e1-97ee-42ba-b9c7-45c0e6f8f54d",
+        "84eef646-7abd-45d3-9a64-8c26a8bd2615",
+        "f19ffc2e-5a6d-43e7-96cf-faa335ca9eab"
+      ],
+      "description": "AI Agent turns the article into insights, a LinkedIn carousel, and an X thread."
+    },
+    {
+      "id": "4ee0b10e-70da-4288-8c08-67c1261983c1",
+      "name": "Store",
+      "nodeIds": [
+        "c518fb2a-ab68-4f28-b351-7ef5cd0ad1ca"
+      ],
+      "description": "Appends the generated assets to the Content Calendar as a Draft."
+    }
+  ],
+  "id": "mkvB3dCVYeRmYo4T",
+  "tags": []
+}
