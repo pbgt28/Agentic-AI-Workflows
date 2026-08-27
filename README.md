@@ -138,14 +138,6 @@ These projects demonstrate practical applications of Agentic AI for:
 - Technical content repurposing
 - Multi-channel content creation
 
-## Screenshots
-
-### Enterprise ICP Qualifier
-Add workflow and sample-output screenshots here.
-
-### Content Repurposer
-Add workflow and sample-output screenshots here.
-
 ## Disclaimer
 
 These projects are personal implementations created for learning and demonstration purposes. API credentials and other sensitive information are not included in this repository.
